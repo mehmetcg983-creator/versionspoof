@@ -4,11 +4,11 @@
 #import <notify.h>
 #import <math.h>
 
-static CFStringRef const kKVSPreferencesDomain = CFSTR("com.kanka.versionspoofer");
-static NSString *const kKVSReloadNotification = @"com.kanka.versionspoofer/prefsChanged";
-static NSString *const kKVSAppStoreBundleID = @"com.apple.AppStore";
+static CFStringRef const kYFSPreferencesDomain = CFSTR("com.yusufspoofer");
+static NSString *const kYFSReloadNotification = @"com.yusufspoofer/prefsChanged";
+static NSString *const kYFSAppStoreBundleID = @"com.apple.AppStore";
 
-@interface KVSConfiguration : NSObject
+@interface YFSConfiguration : NSObject
 @property (nonatomic) BOOL enabled;
 @property (nonatomic) BOOL debug;
 @property (nonatomic) NSInteger major;
@@ -19,18 +19,18 @@ static NSString *const kKVSAppStoreBundleID = @"com.apple.AppStore";
 @property (nonatomic, copy) NSArray<NSString *> *selectedBundleIDs;
 @end
 
-@implementation KVSConfiguration
+@implementation YFSConfiguration
 @end
 
-static NSLock *gKVSConfigurationLock;
-static KVSConfiguration *gKVSConfiguration;
+static NSLock *gYFSConfigurationLock;
+static YFSConfiguration *gYFSConfiguration;
 
-static NSString *KVSVersionString(KVSConfiguration *configuration) {
+static NSString *YFSVersionString(YFSConfiguration *configuration) {
     return [NSString stringWithFormat:@"%ld.%ld.%ld",
             (long)configuration.major, (long)configuration.minor, (long)configuration.patch];
 }
 
-static BOOL KVSReadInteger(NSDictionary *preferences, NSString *key, NSInteger *result) {
+static BOOL YFSReadInteger(NSDictionary *preferences, NSString *key, NSInteger *result) {
     id value = preferences[key];
     if (![value isKindOfClass:[NSNumber class]] ||
         CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()) {
@@ -46,18 +46,18 @@ static BOOL KVSReadInteger(NSDictionary *preferences, NSString *key, NSInteger *
     return YES;
 }
 
-static KVSConfiguration *KVSReadConfiguration(void) {
-    CFPreferencesAppSynchronize(kKVSPreferencesDomain);
+static YFSConfiguration *YFSReadConfiguration(void) {
+    CFPreferencesAppSynchronize(kYFSPreferencesDomain);
     CFDictionaryRef copiedPreferences = CFPreferencesCopyMultiple(
-        NULL, kKVSPreferencesDomain, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+        NULL, kYFSPreferencesDomain, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
     NSDictionary *preferences = copiedPreferences ? CFBridgingRelease(copiedPreferences) : @{};
 
-    KVSConfiguration *configuration = [KVSConfiguration new];
+    YFSConfiguration *configuration = [YFSConfiguration new];
     configuration.enabled = YES;
     configuration.debug = NO;
-    configuration.major = 16;
+    configuration.major = 17;
     configuration.minor = 7;
-    configuration.patch = 16;
+    configuration.patch = 0;
     configuration.build = @"";
     configuration.mode = @"appstore";
     configuration.selectedBundleIDs = @[];
@@ -66,6 +66,7 @@ static KVSConfiguration *KVSReadConfiguration(void) {
     if ([enabled isKindOfClass:[NSNumber class]]) {
         configuration.enabled = [enabled boolValue];
     }
+
     id debug = preferences[@"Debug"];
     if ([debug isKindOfClass:[NSNumber class]]) {
         configuration.debug = [debug boolValue];
@@ -74,9 +75,9 @@ static KVSConfiguration *KVSReadConfiguration(void) {
     NSInteger major = 0;
     NSInteger minor = 0;
     NSInteger patch = 0;
-    BOOL validVersion = KVSReadInteger(preferences, @"Major", &major) && major > 0 &&
-                        KVSReadInteger(preferences, @"Minor", &minor) &&
-                        KVSReadInteger(preferences, @"Patch", &patch);
+    BOOL validVersion = YFSReadInteger(preferences, @"Major", &major) && major > 0 &&
+                        YFSReadInteger(preferences, @"Minor", &minor) &&
+                        YFSReadInteger(preferences, @"Patch", &patch);
     if (validVersion) {
         configuration.major = major;
         configuration.minor = minor;
@@ -109,26 +110,26 @@ static KVSConfiguration *KVSReadConfiguration(void) {
     return configuration;
 }
 
-static void KVSReloadConfiguration(void) {
-    KVSConfiguration *configuration = KVSReadConfiguration();
-    [gKVSConfigurationLock lock];
-    gKVSConfiguration = configuration;
-    [gKVSConfigurationLock unlock];
+static void YFSReloadConfiguration(void) {
+    YFSConfiguration *configuration = YFSReadConfiguration();
+    [gYFSConfigurationLock lock];
+    gYFSConfiguration = configuration;
+    [gYFSConfigurationLock unlock];
 }
 
-static KVSConfiguration *KVSCurrentConfiguration(void) {
-    [gKVSConfigurationLock lock];
-    KVSConfiguration *configuration = gKVSConfiguration;
-    [gKVSConfigurationLock unlock];
+static YFSConfiguration *YFSCurrentConfiguration(void) {
+    [gYFSConfigurationLock lock];
+    YFSConfiguration *configuration = gYFSConfiguration;
+    [gYFSConfigurationLock unlock];
     return configuration;
 }
 
-static NSString *KVSCurrentBundleID(void) {
+static NSString *YFSCurrentBundleID(void) {
     return [NSBundle mainBundle].bundleIdentifier ?: @"";
 }
 
-static BOOL KVSIsApplicationProcess(void) {
-    NSString *bundleID = KVSCurrentBundleID();
+static BOOL YFSIsApplicationProcess(void) {
+    NSString *bundleID = YFSCurrentBundleID();
     NSString *processName = [NSProcessInfo processInfo].processName;
     if (bundleID.length == 0 || [bundleID isEqualToString:@"com.apple.springboard"] ||
         [processName isEqualToString:@"SpringBoard"] || [processName isEqualToString:@"launchd"]) {
@@ -139,8 +140,8 @@ static BOOL KVSIsApplicationProcess(void) {
     return [extension isEqualToString:@"app"] || [extension isEqualToString:@"appex"];
 }
 
-static BOOL KVSShouldSpoof(KVSConfiguration **currentConfiguration) {
-    KVSConfiguration *configuration = KVSCurrentConfiguration();
+static BOOL YFSShouldSpoof(YFSConfiguration **currentConfiguration) {
+    YFSConfiguration *configuration = YFSCurrentConfiguration();
     if (currentConfiguration) {
         *currentConfiguration = configuration;
     }
@@ -148,53 +149,53 @@ static BOOL KVSShouldSpoof(KVSConfiguration **currentConfiguration) {
         return NO;
     }
 
-    NSString *bundleID = KVSCurrentBundleID();
+    NSString *bundleID = YFSCurrentBundleID();
     if ([configuration.mode isEqualToString:@"all"]) {
         return YES;
     }
     if ([configuration.mode isEqualToString:@"selected"]) {
         return [configuration.selectedBundleIDs containsObject:bundleID];
     }
-    return [bundleID isEqualToString:kKVSAppStoreBundleID];
+    return [bundleID isEqualToString:kYFSAppStoreBundleID];
 }
 
-static void KVSLog(NSString *hook, NSString *realValue, NSString *spoofedValue,
-                   KVSConfiguration *configuration) {
+static void YFSLog(NSString *hook, NSString *realValue, NSString *spoofedValue,
+                  YFSConfiguration *configuration) {
     if (!configuration.debug) {
         return;
     }
-    NSLog(@"[KankaVersionSpoofer] process=%@ bundle=%@ hook=%@ real=%@ spoof=%@",
-          [NSProcessInfo processInfo].processName, KVSCurrentBundleID(), hook,
+    NSLog(@"[YusufSpoofer] process=%@ bundle=%@ hook=%@ real=%@ spoof=%@",
+          [NSProcessInfo processInfo].processName, YFSCurrentBundleID(), hook,
           realValue ?: @"(null)", spoofedValue ?: @"(null)");
 }
 
-static NSString *KVSFormattedOperatingSystemVersionString(KVSConfiguration *configuration) {
-    NSString *version = KVSVersionString(configuration);
+static NSString *YFSFormattedOperatingSystemVersionString(YFSConfiguration *configuration) {
+    NSString *version = YFSVersionString(configuration);
     if (configuration.build.length > 0) {
         return [NSString stringWithFormat:@"Version %@ (Build %@)", version, configuration.build];
     }
     return [NSString stringWithFormat:@"Version %@", version];
 }
 
-%group KVSVersionHooks
+%group YFSVersionHooks
 
 %hook UIDevice
 - (NSString *)systemVersion {
-    KVSConfiguration *configuration = nil;
-    if (!KVSShouldSpoof(&configuration)) {
+    YFSConfiguration *configuration = nil;
+    if (!YFSShouldSpoof(&configuration)) {
         return %orig;
     }
     NSString *realVersion = %orig;
-    NSString *spoofedVersion = KVSVersionString(configuration);
-    KVSLog(@"UIDevice.systemVersion", realVersion, spoofedVersion, configuration);
+    NSString *spoofedVersion = YFSVersionString(configuration);
+    YFSLog(@"UIDevice.systemVersion", realVersion, spoofedVersion, configuration);
     return spoofedVersion;
 }
 %end
 
 %hook NSProcessInfo
 - (NSOperatingSystemVersion)operatingSystemVersion {
-    KVSConfiguration *configuration = nil;
-    if (!KVSShouldSpoof(&configuration)) {
+    YFSConfiguration *configuration = nil;
+    if (!YFSShouldSpoof(&configuration)) {
         return %orig;
     }
     NSOperatingSystemVersion realVersion = %orig;
@@ -206,26 +207,26 @@ static NSString *KVSFormattedOperatingSystemVersionString(KVSConfiguration *conf
     NSString *realString = [NSString stringWithFormat:@"%ld.%ld.%ld",
                             (long)realVersion.majorVersion, (long)realVersion.minorVersion,
                             (long)realVersion.patchVersion];
-    KVSLog(@"NSProcessInfo.operatingSystemVersion", realString,
-           KVSVersionString(configuration), configuration);
+    YFSLog(@"NSProcessInfo.operatingSystemVersion", realString,
+           YFSVersionString(configuration), configuration);
     return spoofedVersion;
 }
 
 - (NSString *)operatingSystemVersionString {
-    KVSConfiguration *configuration = nil;
-    if (!KVSShouldSpoof(&configuration)) {
+    YFSConfiguration *configuration = nil;
+    if (!YFSShouldSpoof(&configuration)) {
         return %orig;
     }
     NSString *realVersion = %orig;
-    NSString *spoofedVersion = KVSFormattedOperatingSystemVersionString(configuration);
-    KVSLog(@"NSProcessInfo.operatingSystemVersionString", realVersion,
+    NSString *spoofedVersion = YFSFormattedOperatingSystemVersionString(configuration);
+    YFSLog(@"NSProcessInfo.operatingSystemVersionString", realVersion,
            spoofedVersion, configuration);
     return spoofedVersion;
 }
 
 - (BOOL)isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion)version {
-    KVSConfiguration *configuration = nil;
-    if (!KVSShouldSpoof(&configuration)) {
+    YFSConfiguration *configuration = nil;
+    if (!YFSShouldSpoof(&configuration)) {
         return %orig;
     }
 
@@ -241,7 +242,7 @@ static NSString *KVSFormattedOperatingSystemVersionString(KVSConfiguration *conf
         (spoofedVersion.majorVersion == version.majorVersion &&
          spoofedVersion.minorVersion == version.minorVersion &&
          spoofedVersion.patchVersion >= version.patchVersion);
-    KVSLog(@"NSProcessInfo.isOperatingSystemAtLeastVersion:",
+    YFSLog(@"NSProcessInfo.isOperatingSystemAtLeastVersion:",
            [NSString stringWithFormat:@"%d", realResult],
            [NSString stringWithFormat:@"%d", spoofedResult], configuration);
     return spoofedResult;
@@ -252,38 +253,38 @@ static NSString *KVSFormattedOperatingSystemVersionString(KVSConfiguration *conf
 
 %ctor {
     @autoreleasepool {
-        if (!KVSIsApplicationProcess()) {
+        if (!YFSIsApplicationProcess()) {
             return;
         }
 
-        gKVSConfigurationLock = [NSLock new];
-        KVSReloadConfiguration();
+        gYFSConfigurationLock = [NSLock new];
+        YFSReloadConfiguration();
 
-        KVSConfiguration *configuration = KVSCurrentConfiguration();
+        YFSConfiguration *configuration = YFSCurrentConfiguration();
         if (configuration.debug) {
             NSOperatingSystemVersion realVersion = [NSProcessInfo processInfo].operatingSystemVersion;
             NSString *realString = [NSString stringWithFormat:@"%ld.%ld.%ld",
                                     (long)realVersion.majorVersion, (long)realVersion.minorVersion,
                                     (long)realVersion.patchVersion];
-            NSLog(@"[KankaVersionSpoofer] injected process=%@ bundle=%@ real=%@ spoof=%@ mode=%@",
-                  [NSProcessInfo processInfo].processName, KVSCurrentBundleID(), realString,
-                  KVSVersionString(configuration), configuration.mode);
+            NSLog(@"[YusufSpoofer] injected process=%@ bundle=%@ real=%@ spoof=%@ mode=%@",
+                  [NSProcessInfo processInfo].processName, YFSCurrentBundleID(), realString,
+                  YFSVersionString(configuration), configuration.mode);
         }
 
         int notificationToken = 0;
-        notify_register_dispatch(kKVSReloadNotification.UTF8String, &notificationToken,
+        notify_register_dispatch(kYFSReloadNotification.UTF8String, &notificationToken,
                                  dispatch_get_global_queue(QOS_CLASS_UTILITY, 0),
                                  ^(int token) {
             (void)token;
-            KVSReloadConfiguration();
-            KVSConfiguration *reloaded = KVSCurrentConfiguration();
+            YFSReloadConfiguration();
+            YFSConfiguration *reloaded = YFSCurrentConfiguration();
             if (reloaded.debug) {
-                NSLog(@"[KankaVersionSpoofer] preferences reloaded process=%@ mode=%@ spoof=%@",
+                NSLog(@"[YusufSpoofer] preferences reloaded process=%@ mode=%@ spoof=%@",
                       [NSProcessInfo processInfo].processName, reloaded.mode,
-                      KVSVersionString(reloaded));
+                      YFSVersionString(reloaded));
             }
         });
 
-        %init(KVSVersionHooks);
+        %init(YFSVersionHooks);
     }
 }

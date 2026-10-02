@@ -32,7 +32,7 @@ for package in "$output_dir"/*.deb; do
 	[ -f "$package" ] || continue
 	package_id=$(dpkg-deb -f "$package" Package)
 	architecture=$(dpkg-deb -f "$package" Architecture)
-	if [ "$package_id" != "com.kanka.versionspoofer" ] || [ "$architecture" != "iphoneos-arm64" ]; then
+	if [ "$package_id" != "com.yusufspoofer" ] || [ "$architecture" != "iphoneos-arm64" ]; then
 		printf 'Unexpected package metadata in %s (Package=%s, Architecture=%s).\n' \
 			"$(basename "$package")" "$package_id" "$architecture" >&2
 		exit 1
