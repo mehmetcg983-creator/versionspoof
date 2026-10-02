@@ -1,0 +1,20 @@
+Origin: Kanka
+Label: Kanka Version Spoofer
+Suite: stable
+Codename: stable
+Architectures: iphoneos-arm64
+Components: main
+Description: Rootless iOS version spoofing packages
+Date: Fri, 02 Oct 2026 14:39:42 +0000
+MD5Sum:
+ d13fce0d505ab570eedc8a8b302907e6              495 Packages
+ eac18f0e86b3b81e6a5e092c46cf8a01              347 Packages.gz
+ d6037d7ecba4c0599987014605b0ee8b              428 Packages.xz
+SHA1:
+ 2e9c87f8c86eb9c9da859cb712b9c17a3ecd939c              495 Packages
+ 03ce8190db979d063e7ea084b91d71dcbe713022              347 Packages.gz
+ 40144880bee313b9c3b29fd0f6a6995b173af29c              428 Packages.xz
+SHA256:
+ 1ad8f4d13a8688b3371f7aa409c55c68eeff7c14c0373b076d1fbf31c606e683              495 Packages
+ f113db0aaeb985216877fcc130b30c96bc0d6f59da91be68c68ada51148ee02c              347 Packages.gz
+ 3d83584d357334507f59d0b1c2ee391fc496ad21b892b724bb07dafc60ce0395              428 Packages.xz

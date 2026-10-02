@@ -1,0 +1,10 @@
+Package: com.kanka.versionspoofer
+Name: Kanka Version Spoofer
+Description: Per-process iOS version spoofing tweak for rootless iOS.
+Maintainer: Kanka
+Author: Kanka
+Section: Tweaks
+Depends: ellekit
+Architecture: iphoneos-arm64
+Version: 1.0.0
+Installed-Size: 92
