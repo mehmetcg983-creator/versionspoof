@@ -1,0 +1,12 @@
+{
+	Enabled = YES;
+	Major = 17;
+	Minor = 7;
+	Patch = 0;
+	Build = "";
+	Mode = "appstore";
+	SelectedBundleIDs = (
+		"com.apple.AppStore",
+	);
+	Debug = NO;
+}

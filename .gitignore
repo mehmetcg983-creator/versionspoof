@@ -1,0 +1,7 @@
+.theos/
+packages/
+repo/*.deb
+repo/Packages
+repo/Packages.gz
+repo/Packages.xz
+repo/Release
